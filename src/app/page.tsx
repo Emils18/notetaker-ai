@@ -46,19 +46,38 @@ export default function Home() {
   }, [loading]);
 
   const handleImage = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (!e.target.files?.[0]) return;
+    const file = e.target.files?.[0];
+    if (!file) return;
+  
     setLoading(true);
-    setLoadingMsg('Scanning Image...');
+    setLoadingMsg("Preparing image...");
+  
     try {
-      const { data: { text } } = await Tesseract.recognize(e.target.files[0], 'eng');
-      setNotes(text);
+      const result = await Tesseract.recognize(file, "eng", {
+        logger: (m) => {
+          if (m.status === "recognizing text") {
+            setLoadingMsg(`Scanning Image... ${Math.round(m.progress * 100)}%`);
+          }
+        },
+      });
+  
+      const text = result.data.text?.trim();
+  
+      if (!text) {
+        alert("No readable text found in the image.");
+        return;
+      }
+  
+      setNotes((prev) => prev + "\n" + text); // append instead of overwrite
     } catch (error) {
-      alert("Failed to read image text.");
+      console.error("OCR Error:", error);
+      alert("Failed to read image text. Try a clearer image.");
     } finally {
       setLoading(false);
+      setLoadingMsg("");
     }
   };
-
+  
   const processNotes = async () => {
     if (!notes.trim()) return alert("Paste notes first!");
     setLoading(true);
