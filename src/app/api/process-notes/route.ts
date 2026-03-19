@@ -1,34 +1,70 @@
 import { NextResponse } from "next/server";
-import { GoogleGenerativeAI } from "@google/generative-ai";
+import Groq from "groq-sdk";
 
-export async function GET() {
-    return NextResponse.json({ message: "API is working" });
-}
+const groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
 
 export async function POST(req: Request) {
     try {
         const { notesText, mode } = await req.json();
-        const apiKey = process.env.GEMINI_API_KEY;
 
-        if (!apiKey) 
-            return NextResponse.json({ error: "API Key missing" }, { status: 500 });
+        if (!notesText) {
+            return NextResponse.json({ error: "No notes provided" }, { status: 400 });
+        }
 
-        const genAI = new GoogleGenerativeAI(apiKey);
-        const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
+        // --- ENHANCED DESIGN INSTRUCTIONS ---
+        let systemPrompt = "";
+        
+        if (mode === 'summary') {
+            systemPrompt = `
+            Act as a professional editor. Summarize the notes into a high-level EXECUTIVE SUMMARY.
+            - Use "# 📝 [Title]" for the main heading.
+            - Use "## [Section]" for categories.
+            - Use "●" for main points and "○" for details.
+            - **BOLD** critical terms.
+            - Separate topics with "---" dividers.
+            `;
+        } else if (mode === 'quiz') {
+            systemPrompt = `
+            Act as a professor. Create a challenging 5-question multiple-choice quiz.
+            - Title: "# ❓ KNOWLEDGE ASSESSMENT"
+            - For each question, use this structure:
+              ---
+              ### Question [N]
+              **[Question Text]**
+              * A) [Choice]
+              * B) [Choice]
+              * C) [Choice]
+              * D) [Choice]
+            - At the end, add "# 🔑 ANSWER KEY" with brief explanations.
+            `;
+        } else if (mode === 'flashcards') {
+            systemPrompt = `
+            Act as a study coach. Create 5 high-impact flashcards.
+            - You MUST follow this EXACT format for every card:
+              ---
+              ## 🎴 CARD [N]
+              **FRONT:**
+              > [Question/Concept]
 
-        const prompt = `Task: ${mode}\nContent: ${notesText}`;
-        const result = await model.generateContent(prompt);
-        const response = await result.response;
+              **BACK:**
+              > [Detailed Answer/Explanation]
+              ---
+            `;
+        }
 
-        return NextResponse.json({ summary: response.text() });
+        const completion = await groq.chat.completions.create({
+            messages: [
+                { role: "system", content: "You are a professional tutor. Output ONLY clean Markdown. Never say 'Sure' or 'Here is your text'." },
+                { role: "system", content: systemPrompt },
+                { role: "user", content: notesText }
+            ],
+            model: "llama-3.1-8b-instant", 
+            temperature: 0.5, // Keeps results factual and consistent
+        });
+
+        return NextResponse.json({ summary: completion.choices[0]?.message?.content || "" });
 
     } catch (error: any) {
-        if (error.message?.includes("429") || error.status === 429) {
-            return NextResponse.json(
-                { summary: "Rate limit reached. AHAK NA POYA." }, 
-                { status: 429 }
-            );
-        }
-        return NextResponse.json({ summary: "AI Error: " + error.message }, { status: 500 });
+        return NextResponse.json({ error: error.message }, { status: 500 });
     }
 }
