@@ -23,9 +23,9 @@ export async function POST(req: Request) {
     let systemPrompt = "";
 
     if (mode === "summary") {  /* Earl Brian Baclohan */
-      systemPrompt = `Summarize the notes into a structured executive summary using Markdown.`;
+      systemPrompt = `Create an organized executive summary from the notes using Markdown.`;
     } else if (mode === "quiz") { 
-      systemPrompt = `Create a 5-question multiple-choice quiz based on the notes.`;
+      systemPrompt = `Make a five-question multiple-choice test using the notes as a guide.`;
     } else if (mode === "flashcards") {
       systemPrompt = `Create 5 flashcards in Q&A format.`;
     }
