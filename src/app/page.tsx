@@ -45,7 +45,7 @@ export default function Home() {
     }
   }, [loading]);
 
-  const handleImage = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleImage = async (e: React.ChangeEvent<HTMLInputElement>) => {   //RODLIE ANGEL D. FUENTES
     if (!e.target.files?.[0]) return;
     setLoading(true);
     setLoadingMsg('Scanning Image...');
