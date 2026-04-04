@@ -7,6 +7,7 @@ import Tesseract from 'tesseract.js'
 import ReactMarkdown from 'react-markdown'
 import { supabase } from './supabase'
 
+
 // ================= TEAM DATA =================
 const TEAM = [
   { name: "Rodlie Fuentes", role: "Lead Developer", img: "https://api.dicebear.com/7.x/avataaars/svg?seed=Rodlie" },
