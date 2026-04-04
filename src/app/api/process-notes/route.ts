@@ -51,6 +51,14 @@ export async function POST(req: Request) {
         S: [Statement Text] | Answer: [True or False] | E: [One sentence explanation why]
         (Every statement MUST be on one single line).
         `;
+      }else if (quizType === "fc") {
+        // 🔥 ADD THIS BLOCK HERE:
+        systemPrompt = `
+        Create 8 high-impact study flashcards.
+        STRICT FORMAT: 
+        Front: [Concept Name] | Back: [Clear Definition]
+        (Every card MUST be on one single line).
+        `;
       }
     }
 
